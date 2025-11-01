@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Food Ordering – BEFORE (Poor Color Choices)</title>
+  <style>
+    /* Intentionally poor color choices for IA2 "before" demo */
+    :root {
+      --bg: #ffffff;
+      --text: #333;
+      --brand: #00ff00; /* neon green */
+      --brand-dark: #00cc00;
+      --danger: #ff0000;
+      --warn: #ff9900;
+      --muted: #aaaaaa;
+      --nav: #00dd00;
+    }
+    html, body { height: 100%; }
+    body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: var(--bg); color: var(--text); }
+    header {
+      background: linear-gradient(90deg, var(--brand) 0 50%, var(--brand-dark) 50%);
+      color: #00aa00; /* green text on green background – poor contrast */
+      padding: 14px 18px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .brand { font-size: 22px; font-weight: 900; letter-spacing: 0.5px; }
+    nav { display: flex; gap: 14px; margin-top: 6px; }
+    nav a { color: #00bb00; text-decoration: none; font-weight: 700; padding: 6px 10px; border-radius: 8px; }
+    nav a.active { background: #00ee00; color: #00cc00; /* green on green */ }
+
+    .container { max-width: 1100px; margin: 18px auto; padding: 0 16px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+    .card { border: 2px solid var(--brand); border-radius: 12px; padding: 12px; background: #eeffee; }
+    .card h3 { margin: 6px 0 4px; }
+    .muted { color: #9ad09a; }
+
+    .btn { border: 0; background: var(--brand); color: #00aa00; padding: 10px 12px; border-radius: 10px; cursor: pointer; font-weight: 800; }
+    .btn:hover { background: var(--brand-dark); }
+    .btn-danger { background: var(--danger); color: #ffaaaa; }
+    .link { color: #00bb00; }
+
+    .badge { display: inline-block; width: 14px; height: 14px; border-radius: 999px; margin-right: 6px; }
+    .b-open { background: #00ff00; }
+    .b-busy { background: #ff9900; }
+    .b-closed { background: #ff0000; }
+
+    .promo { background: #ffffcc; color: #ffeecc; padding: 10px; border-radius: 10px; border: 1px solid #ffffdd; margin-bottom: 12px; }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+    .status-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; }
+    .s-prep { background: #ff9900; }
+    .s-dispatch { background: #00ff00; }
+    .s-cancel { background: #ff0000; }
+
+    .checkout-bar { position: fixed; left: 0; right: 0; bottom: 0; background: #00dd00; color: #00aa00; display: flex; justify-content: center; gap: 14px; padding: 10px; }
+
+    .overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, .25); display: none; align-items: center; justify-content: center; }
+    .modal { background: #eeffee; border: 2px solid #00ff00; padding: 16px; border-radius: 12px; width: min(520px, 92vw); }
+
+    :focus { outline: none; }
+
+    .page { display: none; }
+    .page.active { display: block; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">YumRush</div>
+    <nav>
+      <a href="#" data-page="home" class="active">Home</a>
+      <a href="#" data-page="restaurant">Restaurants</a>
+      <a href="#" data-page="offers">Offers</a>
+      <a href="#" data-page="cart">Cart</a>
+      <a href="#" data-page="track">Track Order</a>
+    </nav>
+  </header>
+
+  <div class="container">
+    <section id="page-home" class="page active">
+      <div class="promo">Festival offer! Use code FEST50 to save 50% today only.</div>
+      <h2>Nearby Restaurants</h2>
+      <div id="homeGrid" class="grid"></div>
+    </section>
+
+    <section id="page-restaurant" class="page">
+      <button class="btn" id="backHome">← Back</button>
+      <h2 id="restTitle">Restaurant</h2>
+      <p class="muted"><span class="badge b-open"></span>Open • <span class="badge b-busy"></span>Busy • <span class="badge b-closed"></span>Closed (color only)</p>
+      <div id="menuGrid" class="grid"></div>
+    </section>
+
+    <section id="page-offers" class="page">
+      <h2>Offers</h2>
+      <div class="promo">MEGA SALE! GREEN DEALS FOR EVERYONE – 15% OFF ON GREEN ITEMS</div>
+      <div class="promo">Orange Hour: Extra 10% if your cart has orange-highlighted dishes</div>
+      <p class="muted">*Terms are color based; no labels or icons to indicate which items are included.</p>
+    </section>
+
+    <section id="page-cart" class="page">
+      <h2>Your Cart</h2>
+      <div id="cartList"></div>
+      <p id="cartEmpty" class="muted">Cart is empty</p>
+      <button class="btn" id="checkoutBtn">Checkout</button>
+    </section>
+
+    <section id="page-track" class="page">
+      <h2>Track Order</h2>
+      <table>
+        <thead><tr><th>Step</th><th>Status</th><th>Time</th></tr></thead>
+        <tbody id="trackTable"></tbody>
+      </table>
+      <p class="muted">No text labels inside table cells; dots rely only on color.</p>
+    </section>
+  </div>
+
+  <div class="checkout-bar">
+    <button class="btn" data-page="cart">View Cart</button>
+    <button class="btn">Need Help?</button>
+  </div>
+
+  <div id="overlay" class="overlay">
+    <div class="modal">
+      <h3 id="modalTitle">Add Item</h3>
+      <p id="modalPrice" class="muted">Price shown in green is discount, red is regular. (Confusing!)</p>
+      <div style="display:flex; gap:8px; align-items:center; margin:10px 0">
+        <button class="btn" id="qtyMinus">–</button>
+        <div id="qty" style="min-width:32px; text-align:center; font-weight:900">1</div>
+        <button class="btn" id="qtyPlus">+</button>
+      </div>
+      <div style="display:flex; gap:8px; justify-content:flex-end">
+        <!-- 🚫 Confusing color: Cancel button is green instead of red -->
+        <button class="btn" id="closeModal" style="background:#00ff00; color:#008800; font-weight:800;">Cancel</button>
+        <button class="btn" id="addToCart">Add to Cart</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const restaurants = [
+      { id: 1, name: 'Green Bowl', cuisine: 'Salads & Bowls', status: 'open' },
+      { id: 2, name: 'Red Spice', cuisine: 'Indian', status: 'busy' },
+      { id: 3, name: 'Orange Street Pizza', cuisine: 'Pizza', status: 'closed' },
+      { id: 4, name: 'Mint & Lime', cuisine: 'Thai', status: 'open' }
+    ];
+    const menus = {
+      1: [{ id: '1a', name: 'Avocado Power Bowl', price: 249, tag: 'green' },
+          { id: '1b', name: 'Quinoa Citrus Mix', price: 199, tag: 'orange' },
+          { id: '1c', name: 'Kale Caesar', price: 179, tag: 'red' }],
+      2: [{ id: '2a', name: 'Paneer Tikka', price: 219, tag: 'green' },
+          { id: '2b', name: 'Dal Makhani', price: 189, tag: 'orange' },
+          { id: '2c', name: 'Veg Biryani', price: 229, tag: 'red' }],
+      3: [{ id: '3a', name: 'Margherita', price: 299, tag: 'green' },
+          { id: '3b', name: 'Farmhouse', price: 349, tag: 'orange' },
+          { id: '3c', name: 'Spicy Arrabbiata', price: 329, tag: 'red' }],
+      4: [{ id: '4a', name: 'Pad Thai Veg', price: 279, tag: 'green' },
+          { id: '4b', name: 'Basil Fried Rice', price: 259, tag: 'orange' },
+          { id: '4c', name: 'Red Curry Veg', price: 289, tag: 'red' }]
+    };
+
+    let currentRestaurant = null, modalItem = null, cart = [];
+
+    function el(tag, attrs={}, children=[]) {
+      const e=document.createElement(tag);
+      Object.entries(attrs).forEach(([k,v])=> e.setAttribute(k,v));
+      (Array.isArray(children)?children:[children]).forEach(c=>{
+        if(typeof c==='string') e.appendChild(document.createTextNode(c)); else if(c) e.appendChild(c);
+      });
+      return e;
+    }
+
+    function badge(status){
+      const span = el('span',{class:'badge '+(status==='open'?'b-open':status==='busy'?'b-busy':'b-closed')});
+      return span;
+    }
+
+    function renderHome(){
+      const grid=document.getElementById('homeGrid');
+      grid.innerHTML='';
+      restaurants.forEach(r=>{
+        const card=el('div',{class:'card'});
+        const head=el('div',{},[badge(r.status),el('strong',{},r.name)]);
+        card.appendChild(head);
+        card.appendChild(el('div',{class:'muted'},r.cuisine));
+        const openBtn=el('button',{class:'btn',onclick:`openRestaurant(${r.id})`},'View Menu');
+        card.appendChild(el('div',{style:'margin-top:8px'},openBtn));
+        grid.appendChild(card);
+      });
+    }
+
+    function openRestaurant(id){
+      currentRestaurant=restaurants.find(x=>x.id===id);
+      document.getElementById('restTitle').textContent=currentRestaurant.name;
+      const grid=document.getElementById('menuGrid');
+      grid.innerHTML='';
+      menus[id].forEach(item=>{
+        const card=el('div',{class:'card'});
+        const name=el('h3',{},item.name);
+        const price=el('div',{class:'muted'},`₹${item.price}`);
+        const swatch=el('div',{class:'badge',style:`background:${item.tag==='green'?'#00ff00':item.tag==='orange'?'#ff9900':'#ff0000'}`});
+        const add=el('button',{class:'btn',onclick:`showAddModal('${id}','${item.id}')`},'Add');
+        card.append(name,price,el('div',{},[swatch,document.createTextNode(' Offer eligibility shown by color only')]),el('div',{style:'margin-top:8px'},add));
+        grid.appendChild(card);
+      });
+      go('restaurant');
+    }
+
+    function renderCart(){
+      const wrap=document.getElementById('cartList'), empty=document.getElementById('cartEmpty');
+      wrap.innerHTML='';
+      if(cart.length===0){
+        empty.style.display='block';
+        return;
+      } else {
+        empty.style.display='none';
+      }
+
+      cart.forEach((c,i)=>{
+        const row=el('div',{class:'card'});
+        row.append(el('strong',{}, c.name+` ×${c.qty}`));
+        row.append(el('div',{class:'muted'}, `₹${c.price*c.qty}`));
+
+        // 🚫 Wrong color choice – using green for 'Remove' button instead of red
+        const rm=el('button',{
+          class:'btn',
+          style:'background:#00ff00; color:#008800; font-weight:800;',
+          onclick:`removeCart(${i})`
+        }, 'Remove');
+
+        row.append(el('div',{style:'margin-top:6px'}, rm));
+        wrap.appendChild(row);
+      });
+    }
+
+    function removeCart(i){ cart.splice(i,1); renderCart(); }
+
+    function renderTrack(){
+      const tbody=document.getElementById('trackTable'); tbody.innerHTML='';
+      const steps=[{name:'Order Placed',cls:'s-prep',t:'12:05 PM'},
+                   {name:'Preparing',cls:'s-prep',t:'12:10 PM'},
+                   {name:'Out for Delivery',cls:'s-dispatch',t:'12:35 PM'},
+                   {name:'Delivered',cls:'s-dispatch',t:'--'}];
+      steps.forEach(s=>{
+        const tr=el('tr');
+        tr.append(el('td',{},s.name));
+        tr.append(el('td',{},el('span',{class:'status-dot '+s.cls})));
+        tr.append(el('td',{},s.t));
+        tbody.appendChild(tr);
+      });
+    }
+
+    function go(page){
+      document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('active',a.getAttribute('data-page')===page));
+      document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+      document.getElementById('page-'+page).classList.add('active');
+      if(page==='cart') renderCart();
+      if(page==='track') renderTrack();
+    }
+
+    document.querySelectorAll('nav a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();go(a.getAttribute('data-page'));}));
+    document.getElementById('backHome').addEventListener('click',()=>go('home'));
+
+    const overlay=document.getElementById('overlay'), qtyEl=document.getElementById('qty');
+    document.getElementById('qtyPlus').onclick=()=>qtyEl.textContent=(+qtyEl.textContent)+1;
+    document.getElementById('qtyMinus').onclick=()=>qtyEl.textContent=Math.max(1,(+qtyEl.textContent)-1);
+
+    function showAddModal(restId,itemId){
+      const item=menus[restId].find(i=>i.id===itemId);
+      modalItem={restId,...item};
+      document.getElementById('modalTitle').textContent=item.name;
+      document.getElementById('modalPrice').textContent=`Price shown in green is discount, red is regular. (Confusing!) ₹${item.price}`;
+      qtyEl.textContent='1';
+      overlay.style.display='flex';
+    }
+    document.getElementById('closeModal').onclick=()=>overlay.style.display='none';
+    document.getElementById('addToCart').onclick=()=>{
+      const qty=+qtyEl.textContent;
+      cart.push({name:modalItem.name,price:modalItem.price,qty});
+      overlay.style.display='none';
+      go('cart');
+    };
+    document.getElementById('checkoutBtn').addEventListener('click',()=>{go('track');});
+
+    renderHome();
+  </script>
+</body>
+</html>

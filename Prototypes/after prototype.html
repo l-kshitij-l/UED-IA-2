@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Food Ordering – AFTER (Accessible, WCAG Compliant)</title>
+  <style>
+    :root {
+      --bg:#f7f9fb;
+      --text:#1f2937; /* Slate 800 */
+      --muted:#4b5563;
+      --primary:#2563eb; /* Blue 600 */
+      --primary-hover:#1d4ed8;
+      --success:#15803d; /* Green 700 */
+      --warning:#b45309; /* Amber 700 */
+      --error:#b91c1c;   /* Red 700 */
+      --card:#ffffff;
+      --border:#d1d5db;
+      --focus:#7c3aed;
+    }
+    body {
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      background:var(--bg);
+      color:var(--text);
+    }
+    header {
+      background:var(--primary);
+      color:#fff;
+      padding:14px 18px;
+      position:sticky;
+      top:0;
+      z-index:10;
+    }
+    .brand {font-size:22px;font-weight:900;}
+    nav {display:flex;gap:12px;margin-top:6px;}
+    nav a {
+      color:#fff;
+      text-decoration:none;
+      font-weight:700;
+      padding:6px 10px;
+      border-radius:8px;
+    }
+    nav a.active{background:var(--primary-hover);}
+    nav a:focus-visible{outline:3px solid #fff;outline-offset:2px;}
+
+    .container{max-width:1100px;margin:18px auto;padding:0 16px;}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;}
+    .card{
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:12px;
+      background:var(--card);
+      box-shadow:0 1px 4px rgba(0,0,0,.05);
+    }
+    .card h3{margin:6px 0 4px;}
+    .muted{color:var(--muted);}
+
+    .btn{
+      border:0;
+      background:var(--primary);
+      color:#fff;
+      padding:10px 12px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:700;
+    }
+    .btn:hover{background:var(--primary-hover);}
+    .btn:focus-visible{outline:3px solid var(--focus);outline-offset:2px;}
+    .btn[disabled]{opacity:.6;cursor:not-allowed;}
+    .btn-danger{background:var(--error);}
+    .btn-success{background:var(--success);}
+
+    .badge{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;font-weight:700;color:#fff;font-size:0.85rem;}
+    .b-open{background:var(--success);}
+    .b-busy{background:var(--warning);}
+    .b-closed{background:var(--error);}
+
+    .promo{
+      background:var(--primary);
+      color:#fff;
+      padding:10px 12px;
+      border-radius:10px;
+      margin-bottom:12px;
+      font-weight:700;
+    }
+
+    table{width:100%;border-collapse:collapse;}
+    th,td{border:1px solid var(--border);padding:10px;text-align:left;}
+    .status{display:inline-flex;align-items:center;gap:6px;font-weight:700;}
+    .dot{width:12px;height:12px;border-radius:50%;display:inline-block;}
+    .dot.success{background:var(--success);}
+    .dot.warn{background:var(--warning);}
+    .dot.err{background:var(--error);}
+
+    .checkout-bar{
+      position:fixed;
+      left:0;right:0;bottom:0;
+      background:var(--primary);
+      color:#fff;
+      display:flex;
+      justify-content:center;
+      gap:14px;
+      padding:10px;
+    }
+
+    .overlay{
+      position:fixed;inset:0;
+      background:rgba(0,0,0,.35);
+      display:none;
+      align-items:center;
+      justify-content:center;
+    }
+    .modal{
+      background:var(--card);
+      border:1px solid var(--border);
+      padding:16px;
+      border-radius:12px;
+      width:min(520px,92vw);
+    }
+
+    .page{display:none;}
+    .page.active{display:block;}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">YumRush</div>
+    <nav role="navigation" aria-label="Main">
+      <a href="#" data-page="home" class="active">Home</a>
+      <a href="#" data-page="restaurant">Restaurants</a>
+      <a href="#" data-page="offers">Offers</a>
+      <a href="#" data-page="cart">Cart</a>
+      <a href="#" data-page="track">Track Order</a>
+    </nav>
+  </header>
+
+  <main class="container" role="main">
+    <!-- HOME -->
+    <section id="page-home" class="page active" aria-labelledby="home-title">
+      <div class="promo">🎉 Use code <strong>FEST50</strong> to save 50% on items marked with <strong>✓ Offer</strong></div>
+      <h2 id="home-title">Nearby Restaurants</h2>
+      <div id="homeGrid" class="grid"></div>
+    </section>
+
+    <!-- RESTAURANT LIST -->
+    <section id="page-restaurant" class="page" aria-labelledby="restTitle">
+      <button class="btn" id="backHome" aria-label="Back to Home">← Back</button>
+      <h2 id="restTitle">Restaurant</h2>
+      <p class="muted">Status: 
+        <span class="badge b-open">✅ Open</span>
+        <span class="badge b-busy">⚠️ Busy</span>
+        <span class="badge b-closed">❌ Closed</span>
+      </p>
+      <div id="menuGrid" class="grid"></div>
+    </section>
+
+    <!-- OFFERS -->
+    <section id="page-offers" class="page" aria-labelledby="offers-title">
+      <h2 id="offers-title">Offers</h2>
+      <div class="card">
+        <p><strong>FEST50:</strong> Get 50% off on items marked with ✓ Offer label.</p>
+        <p class="muted">Accessible: No color-only distinction, uses text and icons.</p>
+      </div>
+    </section>
+
+    <!-- CART -->
+    <section id="page-cart" class="page" aria-labelledby="cart-title">
+      <h2 id="cart-title">Your Cart</h2>
+      <div id="cartList"></div>
+      <p id="cartEmpty" class="muted">Cart is empty</p>
+      <button class="btn btn-success" id="checkoutBtn">Proceed to Checkout</button>
+    </section>
+
+    <!-- TRACK ORDER -->
+    <section id="page-track" class="page" aria-labelledby="track-title">
+      <h2 id="track-title">Track Order</h2>
+      <table aria-describedby="track-desc">
+        <caption id="track-desc" class="muted">Status uses text + icon + color for accessibility</caption>
+        <thead><tr><th>Step</th><th>Status</th><th>Time</th></tr></thead>
+        <tbody id="trackTable"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <div class="checkout-bar">
+    <button class="btn" data-page="cart">View Cart</button>
+    <button class="btn">Need Help</button>
+  </div>
+
+  <!-- MODAL -->
+  <div id="overlay" class="overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <h3 id="modalTitle">Add Item</h3>
+      <p id="modalMeta" class="muted">Items marked ✓ Offer are eligible for FEST50.</p>
+      <div style="display:flex;gap:8px;align-items:center;margin:10px 0;">
+        <button class="btn" id="qtyMinus" aria-label="Decrease quantity">–</button>
+        <div id="qty" style="min-width:36px;text-align:center;font-weight:900">1</div>
+        <button class="btn" id="qtyPlus" aria-label="Increase quantity">+</button>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn btn-danger" id="closeModal">Cancel</button>
+        <button class="btn btn-success" id="addToCart">Add to Cart</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const restaurants = [
+      {id:1, name:'Green Bowl', cuisine:'Salads & Bowls', status:'open'},
+      {id:2, name:'Red Spice', cuisine:'Indian', status:'busy'},
+      {id:3, name:'Orange Street Pizza', cuisine:'Pizza', status:'closed'},
+      {id:4, name:'Mint & Lime', cuisine:'Thai', status:'open'},
+      {id:5, name:'Blue Ocean Sushi', cuisine:'Japanese', status:'busy'},
+      {id:6, name:'Golden Dosa', cuisine:'South Indian', status:'open'}
+    ];
+
+    const menus = {
+      1:[{id:'1a', name:'Avocado Power Bowl', price:249, offer:true},
+         {id:'1b', name:'Quinoa Citrus Mix', price:199, offer:false}],
+      2:[{id:'2a', name:'Paneer Tikka', price:219, offer:true},
+         {id:'2b', name:'Dal Makhani', price:189, offer:false}],
+      3:[{id:'3a', name:'Margherita', price:299, offer:false}],
+      4:[{id:'4a', name:'Pad Thai Veg', price:279, offer:true}],
+      5:[{id:'5a', name:'California Roll', price:329, offer:true}],
+      6:[{id:'6a', name:'Masala Dosa', price:149, offer:true}]
+    };
+
+    let currentRestaurant=null, modalItem=null, cart=[];
+
+    function el(tag,attrs={},children=[]){
+      const e=document.createElement(tag);
+      Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));
+      (Array.isArray(children)?children:[children]).forEach(c=>{
+        if(typeof c==='string') e.appendChild(document.createTextNode(c));
+        else if(c) e.appendChild(c);
+      });
+      return e;
+    }
+
+    function statusBadge(status){
+      const map={open:['b-open','✅','Open'],busy:['b-busy','⚠️','Busy'],closed:['b-closed','❌','Closed']};
+      const [cls,icon,label]=map[status];
+      return el('span',{class:'badge '+cls,role:'img','aria-label':label},[icon+' '+label]);
+    }
+
+    function renderHome(){
+      const grid=document.getElementById('homeGrid');
+      grid.innerHTML='';
+      restaurants.forEach(r=>{
+        const card=el('div',{class:'card'});
+        card.append(statusBadge(r.status));
+        card.append(el('h3',{},r.name));
+        card.append(el('div',{class:'muted'},r.cuisine));
+        const btn=el('button',{class:'btn','aria-label':`View menu of ${r.name}`,onclick:`openRestaurant(${r.id})`},'View Menu');
+        if(r.status==='closed') btn.setAttribute('disabled','true');
+        card.append(el('div',{style:'margin-top:8px;'},btn));
+        grid.appendChild(card);
+      });
+    }
+
+    function openRestaurant(id){
+      currentRestaurant=restaurants.find(x=>x.id===id);
+      document.getElementById('restTitle').textContent=currentRestaurant.name;
+      const grid=document.getElementById('menuGrid');
+      grid.innerHTML='';
+      menus[id].forEach(item=>{
+        const card=el('div',{class:'card'});
+        card.append(el('h3',{},item.name));
+        card.append(el('div',{class:'muted'},`₹${item.price}`));
+        const offer=item.offer?el('div',{class:'muted'},'✓ Offer Eligible'):el('div',{class:'muted'},'—');
+        const add=el('button',{class:'btn btn-success',onclick:`showAddModal('${id}','${item.id}')`},'Add');
+        card.append(offer,el('div',{style:'margin-top:8px;'},add));
+        grid.appendChild(card);
+      });
+      go('restaurant');
+    }
+
+    function renderCart(){
+      const wrap=document.getElementById('cartList');
+      const empty=document.getElementById('cartEmpty');
+      wrap.innerHTML='';
+      if(cart.length===0){empty.style.display='block';return;}
+      else empty.style.display='none';
+      cart.forEach((c,i)=>{
+        const row=el('div',{class:'card'});
+        row.append(el('strong',{},`${c.name} ×${c.qty}`));
+        row.append(el('div',{class:'muted'},`₹${c.price*c.qty}`));
+        const rm=el('button',{class:'btn btn-danger','aria-label':`Remove ${c.name}`,onclick:`removeCart(${i})`},'Remove');
+        row.append(el('div',{style:'margin-top:6px;'},rm));
+        wrap.appendChild(row);
+      });
+    }
+
+    function removeCart(i){cart.splice(i,1);renderCart();}
+
+    function renderTrack(){
+      const tbody=document.getElementById('trackTable');
+      tbody.innerHTML='';
+      const steps=[
+        {name:'Order Placed',type:'success',label:'Completed',t:'12:05 PM'},
+        {name:'Preparing',type:'warn',label:'In Progress',t:'12:15 PM'},
+        {name:'Out for Delivery',type:'warn',label:'In Progress',t:'12:35 PM'},
+        {name:'Delivered',type:'success',label:'Delivered',t:'12:55 PM'}
+      ];
+      steps.forEach(s=>{
+        const tr=el('tr');
+        tr.append(el('td',{},s.name));
+        const statusCell=el('td',{},el('span',{class:'status'},[el('span',{class:'dot '+s.type},''),' ',s.label]));
+        tr.append(statusCell);
+        tr.append(el('td',{},s.t));
+        tbody.appendChild(tr);
+      });
+    }
+
+    function go(page){
+      document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('active',a.getAttribute('data-page')===page));
+      document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+      document.getElementById('page-'+page).classList.add('active');
+      if(page==='cart') renderCart();
+      if(page==='track') renderTrack();
+    }
+
+    document.querySelectorAll('nav a').forEach(a=>{
+      a.addEventListener('click',e=>{e.preventDefault();go(a.getAttribute('data-page'));});
+    });
+    document.getElementById('backHome').addEventListener('click',()=>go('home'));
+
+    const overlay=document.getElementById('overlay');
+    const qtyEl=document.getElementById('qty');
+    document.getElementById('qtyPlus').onclick=()=>qtyEl.textContent=(+qtyEl.textContent)+1;
+    document.getElementById('qtyMinus').onclick=()=>qtyEl.textContent=Math.max(1,(+qtyEl.textContent)-1);
+
+    function showAddModal(restId,itemId){
+      const item=menus[restId].find(i=>i.id===itemId);
+      modalItem={restId,...item};
+      document.getElementById('modalTitle').textContent='Add: '+item.name;
+      document.getElementById('modalMeta').textContent=item.offer?'✓ Offer eligible (FEST50 applies)':'Standard price';
+      qtyEl.textContent='1';
+      overlay.style.display='flex';
+    }
+    document.getElementById('closeModal').onclick=()=>overlay.style.display='none';
+    document.getElementById('addToCart').onclick=()=>{
+      const qty=+qtyEl.textContent;
+      cart.push({name:modalItem.name,price:modalItem.price,qty});
+      overlay.style.display='none';
+      go('cart');
+    };
+
+    document.getElementById('checkoutBtn').addEventListener('click',()=>{go('track');});
+    renderHome();
+  </script>
+</body>
+</html>
